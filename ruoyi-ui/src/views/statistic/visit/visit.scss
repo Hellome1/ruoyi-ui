@@ -1,0 +1,32 @@
+.container-statistic {
+  margin: 10px;
+  .patientVisitS {
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    position: relative;
+    box-shadow: 0px 1px 1px #888;
+    margin-bottom: 20px;
+    .header {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+      border-radius: 3px;
+      border-bottom: 1px solid #aaa;
+      background-color: #ddd;
+      align-items: center;
+    }
+  }
+  .section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    .deptVisitStatistic_con {
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1) inset;
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
+}

@@ -98,6 +98,7 @@ export default {
           activePath = "index";
         }
       }
+      if (this.noReemitActiveMenuFunc) return activePath; // 点击之后就不能被activeMenu里的activeRoutes重新导航
       var routes = this.activeRoutes(activePath);
       if (routes.length === 0) {
         activePath = this.currentIndex || this.defaultRouter()
@@ -144,6 +145,7 @@ export default {
       } else {
         // 显示左侧联动菜单
         this.activeRoutes(key);
+        this.noReemitActiveMenuFunc = true; // 点击之后就不能被activeMenu里的activeRoutes重新导航
       }
     },
     // 当前激活的路由

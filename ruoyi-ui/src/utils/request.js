@@ -1,11 +1,13 @@
 import axios from 'axios'
 import { Notification, MessageBox, Message, Loading } from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import { getToken, getTestToken, getStaticToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
 import { tansParams, blobValidate } from "@/utils/ruoyi";
 import cache from '@/plugins/cache'
 import { saveAs } from 'file-saver'
+import { setTestToken } from './auth'
+import Cookies from 'js-cookie'
 
 let downloadLoadingInstance;
 // 是否显示重新登录
@@ -22,12 +24,30 @@ const service = axios.create({
 
 // request拦截器
 service.interceptors.request.use(config => {
+  // console.log(config);
   // 是否需要设置 token
   const isToken = (config.headers || {}).isToken === false
   // 是否需要防止数据重复提交
   const isRepeatSubmit = (config.headers || {}).repeatSubmit === false
   if (getToken() && !isToken) {
     config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+  }
+  // 获取 testToken
+  const isSetToken = (config.headers || {}).isSetToken === true
+  // 是否需要获取并储存 testToken
+  if (isSetToken && !getTestToken()) {
+    setTestToken().then(res => {
+      // console.log(res);
+      Cookies.set('access_token', res.data.access_token);
+    })
+  }
+  // 是否需要设置 testToken
+  const isTestToken = config.baseURL === '/emr/' ? true : false
+  if (isTestToken && getTestToken()) {
+    config.headers['Authorization'] = 'Bearer ' + getTestToken()
+  }
+  if (config.url.indexOf('log/business/list') > -1) {
+    config.timeout = 20000
   }
   // get请求映射params参数
   if (config.method === 'get' && config.params) {
@@ -102,6 +122,11 @@ service.interceptors.response.use(res => {
         type: 'error'
       })
       return Promise.reject(new Error(msg))
+    } else if(code === 400) {
+      Notification.warning({
+        title: msg
+      })
+      return Promise.reject(res.data)
     } else if (code !== 200) {
       Notification.error({
         title: msg
@@ -159,3 +184,18 @@ export function download(url, params, filename) {
 }
 
 export default service
+
+const service1 = axios.create({
+  // baseURL: 'http://192.178.61.87:8002',
+  baseURL: 'http://192.178.61.172:8001', // 测试库
+  timeout: 3000
+})
+
+service1.interceptors.request.use(config => {
+  // console.log(config);
+  config.headers['Authorization'] = 'Basic ' + getStaticToken()
+  config.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
+  return config
+})
+
+export { service1 }

@@ -11,7 +11,8 @@ export function login(username, password, code, uuid) {
   return request({
     url: '/login',
     headers: {
-      isToken: false
+      isToken: false,
+      isSetToken: true // 登陆的时候获取患者管理token
     },
     method: 'post',
     data: data

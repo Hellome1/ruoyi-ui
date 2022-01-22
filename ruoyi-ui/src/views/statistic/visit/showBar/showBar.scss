@@ -1,0 +1,56 @@
+.showBar_container {
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  position: relative;
+  box-shadow: 0 1px 2px #aaa;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+    padding: 0 10px;
+    border-bottom: 1px solid #aaa;
+    background-color: #eee;
+    h3 {
+      font-size: 16px;
+      .highlight {
+        color: #3483df;
+        font-size: 20px;
+      }
+    }
+  }
+  .barsCon {
+    overflow-y: scroll;
+    padding: 5px 15px;
+    .bars {
+      list-style: none;
+      .bar {
+        padding: 10px 0;
+        .progress {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: #eee;
+          box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1) inset;
+          cursor: pointer;
+          .desc {
+            text-align: center;
+            background-color: #3c90f7;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 3px 0;
+          }
+          .num {
+            padding: 0 10px;
+          }
+        }
+      }
+    }
+  }
+}
