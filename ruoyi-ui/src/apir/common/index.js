@@ -44,3 +44,13 @@ export function deleteList(url, param) {
     data: qs(param)
   })
 }
+
+export function switchAppling(url, param) {
+  return request({
+    method: 'post',
+    baseURL,
+    url,
+    headers,
+    data: qs(param)
+  })
+}
