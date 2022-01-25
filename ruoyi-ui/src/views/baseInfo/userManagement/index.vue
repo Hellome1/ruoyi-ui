@@ -25,10 +25,16 @@
       <right-toolbar :hiddenSearch="true" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="sysList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="50" align="center" />
       <template v-for="dtc in dtcs">
-        <el-table-column :key="dtc.val" v-if="!dtc.isS" :label="dtc.cla" :prop="dtc.val" :width="dtc.w" :show-overflow-tooltip="dtc.sot" align="center"></el-table-column>
+        <template v-if="dtc.formOnly"></template>
+        <el-table-column :key="dtc.val" v-else-if="!dtc.isS && !dtc.innerList" :label="dtc.cla" :prop="dtc.val" :width="dtc.w" :show-overflow-tooltip="dtc.sot" align="center"></el-table-column>
+        <el-table-column :key="dtc.val" v-else-if="dtc.innerList" :label="dtc.cla" :show-overflow-tooltip="dtc.sot" :width="dtc.w" align="center">
+          <template slot-scope="scope">
+              <span class="role_in_uM" v-for="r in scope.row[dtc.val]" :key="r[dtc.inner.key]">{{r[dtc.inner.val] + ' '}}</span>
+          </template>
+        </el-table-column>
         <el-table-column :key="dtc.val" v-else :label="dtc.cla" align="center" :width="dtc.w">
           <template slot-scope="scope">
             <el-switch
@@ -78,10 +84,10 @@
         <template v-for="dtc in dtcs">
           <el-form-item v-if="!dtc.excModal" :key="dtc.val" :label="dtc.cla" :prop="dtc.val">
             <template v-if="!dtc.sele">
-              <el-input v-model="form[dtc.val]" :placeholder="'请输入' + dtc.cla" />
+              <el-input v-model="form[dtc.val]" :placeholder="'请输入' + dtc.cla" :type="dtc.val === 'password' ? 'password' : 'text'"/>
             </template>
             <template v-else>
-              <el-select v-model="form[dtc.formSele]" placeholder="请选择">
+              <el-select v-model="form[dtc.formSele]" placeholder="请选择" multiple>
                 <el-option
                   v-for="item in options"
                   :key="item.value"
@@ -111,7 +117,7 @@
 </template>
 
 <script>
-import { getList as getSysList, setList as setSysList, addList as addSysList, deleteList as deleteSysList, switchAppling } from '@/apir/common';
+import { getList as getUserList, setList as setUserList, addList as addUserList, deleteList as deleteUserList, switchAppling } from '@/apir/common';
 
 export default {
   name: "Role",
@@ -123,51 +129,48 @@ export default {
       // 选中数组
       ids: [],
       // id的key
-      idk: 'id',
+      idk: 'userId',
       // 数据字段和配置
       dtcs: [
         {
-          cla: '系统名称',
-          val: 'systemName',
+          cla: '用户名称',
+          val: 'username',
           sot: false,
           w: 150,
           rule: true
         },
         {
-          cla: '类型代码',
-          val: 'typeCode',
+          cla: '用户账号',
+          val: 'account',
           sot: false,
           w: 150,
           rule: true
         },
         {
-          cla: '系统IP',
-          val: 'webLocationIp',
-          sot: false,
-          w: 250,
-          rule: true
+          formOnly: true,
+          cla: '密码',
+          val: 'password'
         },
         {
-          cla: '创建人',
-          val: 'createUser',
-          sot: false,
-          w: 150
-        },
-        {
-          cla: '默认角色',
-          val: 'roleName',
-          sot: false,
-          w: 150,
-          sele: true,
-          formSele: 'roleId'
-        },
-        {
-          cla: '激活状态',
+          cla: '是否激活',
           val: 'status',
           sot: false,
           w: 150,
           isS: true,
           excModal: true
+        },
+        {
+          cla: '绑定角色',
+          val: 'roles',
+          sot: true,
+          w: 500,
+          innerList: true,
+          inner: {
+            key: 'roleId',
+            val: 'roleName'
+          },
+          sele: true,
+          formSele: 'roleId'
         }
       ],
       // 非单个禁用
@@ -177,7 +180,7 @@ export default {
       // 总条数
       total: 0,
       // 角色表格数据
-      sysList: [],
+      userList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -194,12 +197,11 @@ export default {
         //
       },
       formKeys: {
-        systemName: true,
-        typeCode: true,
-        webLocationIp: true,
-        createUser: true,
-        status: '1',
-        roleId: true,
+        username: 'caacs',
+        account: 'fl',
+        password: 'dddddd',
+        status: 1,
+        roleId: 1331062993856229378
       },
       options: []
     };
@@ -227,19 +229,19 @@ export default {
     getList() {
       this.loading = true;
       this.getSeleL();
-      getSysList('system/list', {
+      getUserList('user/list', {
         pageNumber: this.queryParams.pageNum,
         pageSize: this.queryParams.pageSize
       }).then(res => {
         // console.log({...res});
         this.rawData = this.copy(res.data, true); // 储存原始数据供修改表单显示
-        this.sysList = this.handleNullInData(res.data);
+        this.userList = this.handleNullInData(res.data);
         this.total = res.recordsTotal;
         this.loading = false;
       }).catch((err) => {
         this.loading = false;
         this.total = 0;
-        if (err.recordsTotal === 0) this.sysList = [];
+        if (err.recordsTotal === 0) this.userList = [];
       });
     },
     // 修改列表数据的null字段
@@ -276,7 +278,7 @@ export default {
         par[k] = row[k];
       }
       par[this.idk] = row[this.idk];
-      switchAppling('system/update', par).then(res => {
+      switchAppling('user/update', par).then(res => {
         if (res.code === 200) this.responseSuccess(res);
       }).catch(err => {
         this.getList();
@@ -297,7 +299,7 @@ export default {
     },
     // 获取供选择的表单
     getSeleL(target, selectedName) {
-      getSysList('role/list').then(res => {
+      getUserList('role/list').then(res => {
         let options = [],
           t = {
             label: 'roleName',
@@ -324,7 +326,7 @@ export default {
       let form = {};
       for (let k in keys) {
         if (transed.hasOwnProperty(k)) form[k] = transed[k];
-        else form[k] = this.getAnother(transed.roleName);
+        else form[k] = this.getAnother(transed.roles);
       }
       this.form = form;
       this.open = true;
@@ -332,13 +334,16 @@ export default {
     // 获取select中的另一个值
     getAnother(condition) {
       let ops = this.options;
+      let seles = [];
       for (let k in ops) {
         let op = ops[k];
         for (let key in op) {
-          if (op[key] === condition) return op['value'];
+          for (let i = 0; i < condition.length; i++) {
+            if (op[key] === condition[i].roleName) seles.push(op['value']);
+          }
         }
       }
-      return null;
+      return seles;
     },
     /** 提交按钮 */
     submitForm: function() {
@@ -346,21 +351,34 @@ export default {
         if (valid) {
           if (this.title === "修改"){
             // 修改
-            setSysList('system/update', this.form).then(res => {
+            this.form.roleId && (this.form.roleId = this.form.roleId.join('|'));
+            setUserList('user/update', this.form).then(res => {
               if (res.code === 200) this.responseSuccess(res);
               else this.responseErr(res);
             });
           } else {
             // 新增
             // this.form[this.idk] = "";
-            this.form.status = 1; // 默认激活
-            addSysList('system', this.form).then(res => {
+            this.formCheckout();
+            this.form.roleId && (this.form.roleId = this.form.roleId.join('|'));
+            console.log(this.form);
+            addUserList('user', this.form).then(res => {
               if (res.code === 200) this.responseSuccess(res);
               else this.responseErr(res);
             });
           }
         }
       });
+    },
+    // 表单校验
+    formCheckout() {
+      let form = this.form,
+        fmk = this.formKeys;
+      for (let k in fmk) {
+        if (!form.hasOwnProperty(k)) {
+          form[k] = fmk[k]
+        }
+      }
     },
     // 请求成功响应
     responseSuccess(res) {
@@ -381,7 +399,7 @@ export default {
       param[this.idk] = row[this.idk] || ids.join('|');
       this.$modal.confirm('是否确认删除编号为"' + roleIds + '"的数据？')
       .then(function() {
-        return deleteSysList('system/delete', param);
+        return deleteUserList('user/delete', param);
       }).then(res => {
         if (res.code === 200) this.responseSuccess(res);
         else this.responseErr(res);
@@ -390,3 +408,6 @@ export default {
   }
 };
 </script>
+<style lang="sass" scoped>
+@import './index.scss'
+</style>
