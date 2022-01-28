@@ -37,8 +37,16 @@ service.interceptors.request.use(config => {
   // 是否需要获取并储存 testToken
   if (isSetToken && !getTestToken()) {
     setTestToken().then(res => {
-      // console.log(res);
-      Cookies.set('access_token', res.data.access_token);
+      Cookies.set('access_token', res.access_token)
+      sessionStorage.setItem('refresh_token', res.refresh_token)
+    }).catch(errCode => {
+      if (errCode === 401) {
+        var refresh = sessionStorage.getItem('refresh_token')
+        setTestToken({
+          grant_type: "refresh_token",
+          refresh_token: refresh
+        })
+      }
     })
   }
   // 是否需要设置 testToken
@@ -184,18 +192,3 @@ export function download(url, params, filename) {
 }
 
 export default service
-
-const service1 = axios.create({
-  // baseURL: 'http://192.178.61.87:8002',
-  baseURL: 'http://192.178.61.172:8001', // 测试库
-  timeout: 3000
-})
-
-service1.interceptors.request.use(config => {
-  // console.log(config);
-  config.headers['Authorization'] = 'Basic ' + getStaticToken()
-  config.headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-  return config
-})
-
-export { service1 }

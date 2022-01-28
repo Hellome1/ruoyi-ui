@@ -87,7 +87,7 @@
               <el-input v-model="form[dtc.val]" :placeholder="'请输入' + dtc.cla" :type="dtc.val === 'password' ? 'password' : 'text'"/>
             </template>
             <template v-else>
-              <el-select v-model="form[dtc.formSele]" placeholder="请选择" multiple>
+              <el-select v-model="form[dtc.formSele]" placeholder="请选择" :collapse-tags="form[dtc.formSele] && form[dtc.formSele].length > 2 ? true : false" multiple>
                 <el-option
                   v-for="item in options"
                   :key="item.value"
@@ -120,7 +120,7 @@
 import { getList as getUserList, setList as setUserList, addList as addUserList, deleteList as deleteUserList, switchAppling } from '@/apir/common';
 
 export default {
-  name: "Role",
+  name: "UserManagement",
   // dicts: ['sys_normal_disable'],
   data() {
     return {
@@ -269,10 +269,8 @@ export default {
     // 滑块操作
     handleStatusChange(row) {
       let par = {
-        typeCode: true,
-        webLocationIp: true,
-        systemName: true,
-        status: true,
+        account: true,
+        status: true
       };
       for (let k in par) {
         par[k] = row[k];
