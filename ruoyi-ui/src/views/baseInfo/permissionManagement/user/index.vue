@@ -39,13 +39,13 @@ export default {
         {
           prop: 'account',
           label: '用户账号',
-          w: 280,
+          w: 350,
           sot: false
         },
         {
           prop: 'username',
           label: '用户姓名',
-          w: 280,
+          w: 350,
           sot: false
         },
         {

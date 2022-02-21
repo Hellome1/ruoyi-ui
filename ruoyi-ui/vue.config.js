@@ -43,7 +43,8 @@ module.exports = {
         }
       },
       emr: {
-        target: 'http://192.178.61.172:8001',
+        // target: 'http://192.178.61.172:8001',
+        target: process.env.VUE_EMR_BASE_URL,
         changeOrigin: true
       }
     },

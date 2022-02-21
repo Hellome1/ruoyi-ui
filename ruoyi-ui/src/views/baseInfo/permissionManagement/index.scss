@@ -4,6 +4,7 @@
 .permissionManagement {
   padding: 10px;
   box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
   * {
     margin: 0;
     padding: 0;
@@ -16,41 +17,102 @@
     display: block;
     clear: both;
   }
-  .layout-left {
-    float: left;
-    .role-list {
+  .role-select-container {
+    width: 200px;
+    height: 40px;
+    border: 1px solid #666;
+    border-radius: 5px;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    z-index: 999;
+    .active-role-display {
+      display: inline-block;
+      width: 100%;
       text-align: center;
-      border-right: 1px solid #ccc;
-      padding: 0 20px;
-      color: #555;
-      margin: 10px 0;
-      .role-list-title {
-        margin: 10px 0;
+      height: 38px;
+      line-height: 38px;
+      cursor: pointer;
+      user-select: none;
+      color: white;
+      border-radius: 3px;
+      background-color: rgba(42, 130, 228, 0.8);
+      // box-shadow: 1px 1px 3px rgb(31, 113, 175) inset;
+      box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+      .icon-arrow::after {
+        content: "";
+        font-family: "element-icons" !important;
+        position: absolute;
+        top: 0;
+        right: 10px;
+        font-size: 14px;
+        transition: transform 0.3s;
+        transform: rotateZ(180deg);
       }
-      .roles {
-        .role {
-          width: 250px;
-          height: 50px;
-          line-height: 50px;
-          border: 1px solid #ccc;
-          background-color: #fff;
-          margin-bottom: -1px;
-          cursor: pointer;
+    }
+    .active-role-display.pick-up {
+      .icon-arrow::after {
+        transform: rotateZ(0);
+      }
+    }
+    .role-select {
+      width: 200px;
+      min-height: 300px;
+      overflow: hidden;
+      position: absolute;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      transition: 2s;
+      top: 50px;
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 0px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgb(239, 239, 239);
+        border-radius: 2px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #bfbfbf;
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #666;
+      }
+      .role-list {
+        text-align: center;
+        color: #555;
+        .role-list-title {
+          margin: 10px 0;
         }
-        .role.mouseenter {
-          background-color: rgba(0, 0, 0, 0.1);
-        }
-        .role.active {
-          color: #fff;
-          background-color: rgba(42, 130, 228, 1);
-          border-color: #337ab7;
+        .roles {
+          max-height: 300px;
+          overflow-y: scroll;
+          .role {
+            width: 195px;
+            height: 31px;
+            line-height: 30px;
+            border: 1px solid #ccc;
+            border-left: none;
+            border-right: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            margin-bottom: -1px;
+            cursor: pointer;
+          }
+          .role.mouseenter {
+            background-color: rgba(200, 200, 200, 0.9);
+          }
+          .role.active {
+            color: #fff;
+            background-color: rgba(42, 130, 228, 1);
+            border-color: #337ab7;
+          }
         }
       }
     }
   }
   .layout-right {
-    float: right;
-    width: calc(100% - 300px);
+    width: 100%;
     padding: 10px;
     .main-title {
       margin: 10px 0;

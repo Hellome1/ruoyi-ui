@@ -7,6 +7,8 @@ import './assets/styles/element-variables.scss'
 
 import '@/assets/styles/index.scss' // global css
 import '@/assets/styles/ruoyi.scss' // ruoyi css
+import '@/assets/css/reset.scss' // 重置样式
+import '@/assets/font/font-awesome-4.7.0/css/font-awesome.min.css'
 import App from './App'
 import store from './store'
 import router from './router'

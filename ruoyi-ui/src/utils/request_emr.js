@@ -6,7 +6,7 @@ import errorCode from '@/utils/errorCode'
 // 创建axios实例
 const service1 = axios.create({
   // baseURL: 'http://192.178.61.87:8002',
-  baseURL: 'http://192.178.61.172:8001', // 测试库
+  baseURL: process.env.VUE_EMR_BASE_URL, // 测试库
   timeout: 3000
 })
 

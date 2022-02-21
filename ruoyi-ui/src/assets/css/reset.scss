@@ -1,0 +1,4 @@
+// element-ui table 内容过长 show-overflow-tip
+.el-tooltip__popper {
+  max-width: calc(100% - 20px);
+}

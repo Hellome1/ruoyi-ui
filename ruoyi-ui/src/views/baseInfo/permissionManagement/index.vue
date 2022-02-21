@@ -1,21 +1,26 @@
 <template>
   <div class="app-container">
     <div v-if="roleList.length > 0" class="permissionManagement">
-      <div class="layout-left">
-        <div class="role-list">
-          <h3 class="role-list-title">角色列表</h3>
-          <ul class="roles">
-            <li class="role" :class="rl.class" v-for="rl in roleList" :key="rl.roleId"
-             @click="handleClickRole(rl)" @mouseenter="handleMouseenterRole(rl)" @mouseleave="handleMouseleaveRole"
-            >{{rl.roleName}}</li>
-          </ul>
+      <div class="role-select-container">
+        <div class="active-role-display" :class="showRoles ? 'pick-up' : ''" @click="listRoles">
+          <span class="active-role">{{activeRole}}</span>
+          <span class="icon-arrow"></span>
+        </div>
+        <div class="role-select" :class="showRoles ? '' : 'roles-list-folded'" v-show="showRoles">
+          <div class="role-list">
+            <ul class="roles">
+              <li class="role" :class="rl.class" v-for="rl in roleList" :key="rl.roleId"
+              @click="handleClickRole(rl)" @mouseenter="handleMouseenterRole(rl)" @mouseleave="handleMouseleaveRole"
+              >{{rl.roleName}}</li>
+            </ul>
+          </div>
         </div>
       </div>
       <div class="layout-right">
         <div class="main-title">
-          <h3>{{'用户'}}绑定角色管理</h3>
+          <h3>{{title}}绑定角色管理</h3>
         </div>
-        <el-tabs v-model="activeName">
+        <el-tabs v-model="activeName" v-if="roleId">
           <el-tab-pane label="用户" name="first">
             <User :roleId="roleId" />
           </el-tab-pane>
@@ -53,19 +58,54 @@ export default {
     return {
       // 储存原始数据
       rawData: null,
-      // 角色列表
+      // 角色列表 
       roleList: [],
+      // 活跃角色
+      activeRole: '',
       // 活跃的tab
-      activeName: 'first',
+      activeName: '',
       // 记录当前点击角色列表的roleId
-      roleId: ''
+      roleId: '',
+      // 标题数组
+      titles: ['用户', '菜单', '隐私域', '权限集'],
+      // 活跃标题
+      title: '',
+      // 展示角色列表
+      showRoles: true
     };
+  },
+  watch: {
+    activeName: function(n, o) {
+      let title = '', titles = this.titles;
+      switch (n) {
+        case 'first':
+          title = titles[0];
+          break;
+      
+        case 'second':
+          title = titles[1];
+          break;
+      
+        case 'third':
+          title = titles[2];
+          break;
+      
+        case 'fourth':
+          title = titles[3];
+          break;
+      
+        default:
+          break;
+      }
+      this.title = title;
+    }
   },
   created() {
     this.init(); // 初始化
   },
   methods: {
     init() {
+      this.activeName = 'first';
       this.getRoleList();
     },
     // 获取角色列表
@@ -102,8 +142,9 @@ export default {
       c.active = true;
       // 改变roleId
       this.roleId = r.roleId;
-      // 请求数据
-
+      // 改变活跃角色
+      this.activeRole = r.roleName;
+      this.showRoles = false;
     },
     // 处理角色列表鼠标移入事件
     handleMouseenterRole(r) {
@@ -114,6 +155,9 @@ export default {
     handleMouseleaveRole() {
       let l = this.roleList;
       l.forEach(item => {item.class.mouseenter = false});
+    },
+    listRoles() {
+      this.showRoles = !this.showRoles;
     }
   }
 }
