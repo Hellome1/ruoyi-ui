@@ -6,7 +6,7 @@ const headers = {
   'Content-Type': 'application/x-www-form-urlencoded; charset= UTF-8'
 }
 
-export function getList(url, param) {
+export function getList(url, param = {}) {
   return request({
     method: 'get',
     baseURL,
