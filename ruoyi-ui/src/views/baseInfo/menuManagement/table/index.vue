@@ -1,5 +1,5 @@
 <template>
-  <div class="module_in_permissionManagement">
+  <div class="table_in_menuManagement">
     <div class="menu_main">
       <el-row :gutter="10" class="mb8" style="margin-right: 0;">
         <el-col :span="1.5">
@@ -71,31 +71,70 @@
       </el-table>
     </div>
 
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+    <el-dialog :title="title" :visible.sync="open" width="540px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
         <template v-for="dtc in dtcs">
-          <el-form-item v-if="!dtc.excModal" :key="dtc.prop" :label="dtc.label" :prop="dtc.prop">
-            <template v-if="dtc.isS">
-              <el-switch
-                v-model="form[dtc.prop]"
-                active-value="1"
-                inactive-value="0"
-              ></el-switch>
-            </template>
-            <template v-else-if="!dtc.sele">
-              <el-input v-model="form[dtc.prop]" :placeholder="dtc.disabled ? '' : '请输入' + dtc.label" :disabled="dtc.disabled" :type="dtc.prop === 'password' ? 'password' : 'text'"/>
-            </template>
-            <template v-else>
-              <el-select :disabled="dtc.disabled" v-model="form[dtc.prop]" placeholder="请选择">
-                <el-option
-                  v-for="item in dtc.options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value">
-                </el-option>
-              </el-select>
-            </template>
-          </el-form-item>
+          <template v-if="!dtc.excModal && !dtc.whenIframe">
+             <el-form-item :key="dtc.prop" :label="dtc.label" :prop="dtc.prop">
+              <template v-if="dtc.isS">
+                <el-switch
+                  v-model="form[dtc.prop]"
+                  active-value="1"
+                  inactive-value="0"
+                ></el-switch>
+              </template>
+              <template v-else-if="!dtc.sele">
+                <el-input v-model="form[dtc.prop]" :placeholder="dtc.disabled ? '' : '请输入' + dtc.label" :disabled="dtc.disabled" :type="dtc.prop === 'password' ? 'password' : 'text'"/>
+              </template>
+              <template v-else>
+                <el-select :disabled="dtc.disabled" v-model="form[dtc.prop]" placeholder="请选择" :iframeSwitch="dtc.prop === 'loadType' ? switchToIframe() : null">
+                  <el-option
+                    v-for="item in dtc.options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </template>
+            </el-form-item>
+          </template>
+          <template v-else-if="!dtc.excModal && isIframe">
+            <el-form-item :key="dtc.prop" :label="dtc.label" :prop="dtc.prop">
+              <template v-if="dtc.prop === 'stationaryParams'">
+                <el-input v-model="formJoint[dtc.prop]" :placeholder="'请输入' + dtc.label" type="text"/>
+              </template>
+              <template v-else>
+                <el-input v-model="formJoint[dtc.prop + '_1']" type="text" style="width: 150px;"/>
+                =
+                <el-select v-model="formJoint[dtc.prop + '_2']">
+                  <el-option
+                    v-for="item in dtc.options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+                <span class="numberSelector">
+                  <i class="fa fa-plus" @click="formJointNum++"></i>
+                  <i class="fa fa-minus" @click="formJointNum > 0 ? formJointNum-- : null"></i>
+                </span>
+                <div class="addableArea">
+                  <span v-for="num in formJointNum" :key="num">
+                    <el-input v-model="formJointDouble[num + '_1']" type="text" style="width: 150px;"/>
+                    =
+                    <el-select v-model="formJointDouble[num + '_2']">
+                      <el-option
+                        v-for="item in dtc.options"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                      </el-option>
+                    </el-select>
+                  </span>
+                </div>
+              </template>
+            </el-form-item>
+          </template>
         </template>
         <!-- <el-form-item label="配置描述" prop="systemConfigDesc">
           <el-input v-model="form.systemConfigDesc" placeholder="请输入配置描述" />
@@ -194,7 +233,7 @@ export default {
           prop: 'menuHref',
           label: '链接地址',
           w: 250,
-          sot: true,
+          sot: false,
           align: 'center'
         },
         {
@@ -205,6 +244,10 @@ export default {
           align: 'center'
         }
       ],
+      isIframe: false,
+      formJoint: {},
+      formJointNum: 0,
+      formJointDouble: {},
       // 弹出框
       dtcs: [
         {
@@ -259,6 +302,17 @@ export default {
           ]
         },
         {
+          whenIframe: true,
+          prop: 'stationaryParams',
+          label: '固定参数'
+        },
+        {
+          whenIframe: true,
+          prop: 'setedParams',
+          label: '设置参数',
+          options: setting.options
+        },
+        {
           prop: 'menuHref',
           label: '链接地址',
           rule: true
@@ -304,6 +358,9 @@ export default {
   watch: {
     menuCode: function(n) {
       this.getList();
+    },
+    form: function(n) {
+      console.log(n);
     }
   },
   created() {
@@ -362,6 +419,31 @@ export default {
     // 整理子分支
     arrangeChildren(d) {
       this.rawData = d;
+      // 固定参数和设置的参数
+      d.forEach(di => {
+        let querystring = di.menuHref ? di.menuHref.split('?')[1] : '';
+        if (querystring) {
+          let qsa = querystring.split('&');
+          let stationaryParams = '';
+          let setedParams = '';
+          qsa.forEach(qs => {
+            let n1 = qs.indexOf('{'), n2 = qs.indexOf('}');
+            if (n1 > -1 && n2 > -1 && n1 < n2) {
+              setedParams += '&' + qs;
+            } else {
+              stationaryParams += '&' + qs;
+            }
+          });
+          if (stationaryParams.length > 0) {
+            stationaryParams = stationaryParams.substring(1);
+            di.stationaryParams = stationaryParams;
+          }
+          if (setedParams.length > 0) {
+            setedParams = setedParams.substring(1);
+            di.setedParams = setedParams;
+          }
+        }
+      });
       let nd = this.lookUpCBranch(d, '0', 'parentId', 1);
       return nd;
     },
@@ -429,6 +511,8 @@ export default {
     },
     /* 修改按钮 */
     handleUpdate(row) {
+      this.reset();
+      this.rowToJoint(row); // row里数据取到对应joint
       this.open = true;
       this.title = '修改';
       this.titleCode = 'XG';
@@ -437,7 +521,13 @@ export default {
       row.belongSystemCode = row.belongSystemCode.toLowerCase ? row.belongSystemCode.toLowerCase() : row.belongSystemCode;
       this.dtcs.forEach(dtc => {
         if (dtc.prop === 'parentId' && row.parentId === '0') return;
-        form[dtc.prop] = row[dtc.prop];
+        if (dtc.prop === 'menuHref') {
+          form.menuHref = row.menuHref ? row.menuHref.split('?')[0] : '';
+          return;
+        }
+        if (!dtc.whenIframe) {
+          form[dtc.prop] = row[dtc.prop];
+        }
       });
       this.form = form;
     },
@@ -457,6 +547,9 @@ export default {
     reset() {
       this.id = '';
       this.form = {};
+      this.formJoint = {};
+      this.formJointNum = 0;
+      this.formJointDouble = {};
     },
     // 锁死所属系统
     lockBelongSystem() {
@@ -495,9 +588,13 @@ export default {
           if (this.titleCode === 'XG') {
             let params = this.getLintedParam();
             params[this.idk] = this.id;
+            if (this.isIframe) this.mergeIframeParams(params);
+            console.log(params);
             setList('menu/update', params).then(res => { this.responseBox(res); });
           } else { 
             let params = this.getLintedParam();
+            if (this.isIframe) this.mergeIframeParams(params);
+            console.log(params);
             setList('menu', params).then(res => { this.responseBox(res); });
           }
         }
@@ -517,6 +614,75 @@ export default {
       } else {
         this.$modal.msgError(res.msg);
         this.open = false;
+      }
+    },
+    rowToJoint(row) {
+      if (row.loadType === 'iframe') {
+        let sP = row.stationaryParams, setedP = row.setedParams, formJoint = {}, formJointDouble = {};
+        if (sP) {
+          formJoint.stationaryParams = sP;
+        }
+        if (setedP) {
+          let setedArr = setedP.split('&');
+          for (let i = 0; i < setedArr.length; i++) {
+            if (i === 0) {
+              let nameValue = setedArr[0], name = nameValue.split('=')[0], value = nameValue.split('=')[1];
+              formJoint.setedParams_1 = name;
+              formJoint.setedParams_2 = value;
+            } else {
+              let nameValue = setedArr[i], name = nameValue.split('=')[0], value = nameValue.split('=')[1];
+              formJointDouble[i + '_1'] = name;
+              formJointDouble[i + '_2'] = value;
+              this.formJointNum++;
+            }
+          }
+        }
+        this.formJoint = formJoint;
+        this.formJointDouble = formJointDouble;
+      }
+    },
+    mergeIframeParams(params) {
+      let num = 0, fj = this.formJoint, fjd = this.formJointDouble, fjn = this.formJointNum, querystring = '';
+      console.log(fj, 'fj');
+      console.log(fjd, 'jfd');
+      console.log(fjn, 'fjn');
+      for (let k in fj) { num++ };
+      num += fjn;
+      if (num) {
+        for (let k in fj) {
+          if (k === 'stationaryParams') querystring += '&' + fj[k];
+          else if (k.indexOf('_1') > -1) {
+            let name = fj[k], value = '', qs = '';
+            for (let kd in fj) {
+              if (kd.indexOf('_2') > -1) value = fj[kd];
+            }
+            qs = name + '=' + value;
+            querystring += '&' + qs;
+          }
+        }
+        for (let k in fjd) {
+          if (k.indexOf('_1') > -1) {
+            let key = k.split('_')[0], name = fjd[k], value = '', qs = '';
+            for (let kd in fjd) {
+              if (k != kd && kd.split('_')[0] === key) value = fjd[kd];
+            }
+            qs = name + '=' + value;
+            querystring += '&' + qs;
+          }
+        }
+      }
+      if (querystring.length > 0) {
+        querystring = querystring.substring(1);
+        params.menuHref += '?' + querystring;
+      }
+      return params;
+    },
+    switchToIframe() {
+      console.log(this.form.loadType);
+      if (this.form.loadType === 'iframe') {
+        this.isIframe = true;
+      } else {
+        this.isIframe = false;
       }
     }
   }
